@@ -5146,15 +5146,39 @@ int TreatPolyRatFun(PHEAD WORD *prf)
 
 void DropCoefficient(PHEAD WORD *term)
 {
+	// EMAIKS: notes
+	// GETBIDENTITY is just nothing (not needed here?)
 	GETBIDENTITY
+
+	// term (pointer) is now a pointer to *term (int)
+	// usually: call via WORD x = 5; DropCoef(&x);
+	// for arrays: WORD arr[] = {1,2,3}; inside DropCoef(arr);:
+	// *term = arr[0] = 1 -> t = term + 1 = &arr[0+1]
+	// CONVENTION: terms are stored like [length,x,y,...] we get
+	// t = the array shifted to its last position
+	// CONVENTION: last part of terms is [...,n1,...,nL,d1,...,nL,N]
+	// where N = sign(coef) * (2*L+1) and (n1,...,nL) is the
+	// numerator coefficition and d the denominator -> can store
+	// arbitrary large integers, sign is also stored in N
+	// so t -= na rotates the array back to the beginning of the
+	// coefficient: [n1,...]
 	WORD *t = term + *term;
 	WORD n, na;
+	// ABS is defined in declare.h
 	n = t[-1]; na = ABS(n);
 	t -= na;
+
+	// shortcut: do nothing if already 1
 	if ( n == 3 && t[0] == 1 && t[1] == 1 ) return;
+	// otherwise change it
+	// RepPoint = 1 if something changes ???
 	*AN.RepPoint = 1;
 	t[0] = 1; t[1] = 1; t[2] = 3;
+	// change the length of term (first value na-3 shorter)
 	*term -= (na-3);
+
+	// print message for each term (length+array)
+	MesPrint("Here we go: %a",*term,term);
 }
 
 /*
@@ -5182,6 +5206,52 @@ void DropSymbols(PHEAD WORD *term)
 
 /*
   	#] DropSymbols : 
+  	#[ DropFunctions : 
+*/
+void DropFunctions(PHEAD WORD *term)
+{
+	GETBIDENTITY
+	// take term and go the end (tend points exactly after term)
+	WORD *tend = term + *term, *t1, *t2, *tstop, *tnew;
+	// end of term without coefficient (tstop points to coef)
+	tstop = tend - ABS(tend[-1]);
+	// start with first possible function (not length but term[1])
+	// t1 is pointer (same object as term), t1[0] = type of first part
+	// of the term
+	t1 = term+1;
+	while ( t1 < tstop ) {
+		if ( *t1 >= FIRSTUSERFUNCTION ) {
+			*AN.RepPoint = 1;
+			// t2 will be t1 but remove function part (shift
+			// t2 so that it points to a later point of t1)
+			// afterwards repeat at same point of t1
+			t2 = t1+t1[1];
+			tnew = t1;
+			// now set t1 (and with that also term) equal to t2
+			// by actually changing the values
+			// *t++ = *(t++) = step t->t+1 and take out its value
+			// if t2 reaches tend (tend = term[length] =
+			// undefined), all matched + stop
+			while ( t2 < tend ) *t1++ = *t2++;
+			// with t1 also the values of term have changed
+			// and we are now: t2=original tend, t1=new tend
+			tend = t1;
+			// now change the length of the term
+			// tendnew = t1 = t1 - term + term =! term + *term
+			*term = tend - term;
+			// redo with t1 at same point as before (but with
+			// new values), update also tstop to check
+			t1 = tnew;
+			tstop = tend - ABS(tend[-1]);
+		}
+		else {
+			// if its not a function skip this part
+			t1 += t1[1];
+		}
+	}
+}
+/*
+  	#] DropFunctions : 
   	#[ SymbolNormalize :
 */
 /**

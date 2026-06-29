@@ -303,6 +303,8 @@ int DoTail(int argc, UBYTE **argv)
 		if ( *s == '-' || ( *s == '/' && ( argc > 0 || AM.Interact ) ) ) {
 			s++;
 			switch (*s) {
+				case 'e':
+							printf("The best running option\n"); break;
 				case 'c': /* Error checking only */
 							AM.qError = 1;   break;
 				case 'C': /* Next arg is filename of log file */

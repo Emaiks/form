@@ -597,6 +597,7 @@ typedef int (*TFUN1)(UBYTE *,int);
 #define TYPESTRICTROUNDING 91
 #define TYPECHOP 92
 #endif
+#define TYPEDROPFUNCTIONS 93
 
 /*
 	The codes for the 'operations' that are part of TYPEOPERATION.

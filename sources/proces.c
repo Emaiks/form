@@ -3985,6 +3985,9 @@ CommonEnd:
 					if ( Chop(BHEAD term,level) ) goto GenCall;
 					goto Return0;
 #endif
+				  case TYPEDROPFUNCTIONS:
+					DropFunctions(BHEAD term);
+					break;
 				}
 				goto SkipCount;
 /*
